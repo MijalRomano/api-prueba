@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Frontend</title>
+    <script>
+        async function fetchItems() {
+            const response = await fetch('api.php');
+            const items = await response.json();
+            let output = '<h2>Items</h2>';
+            items.forEach(item => {
+                output += `
+                    <div>
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                        <button onclick="deleteItem(${item.id})">Delete</button>
+                        <button onclick="showEditForm(${item.id}, '${item.name}', '${item.description}')">Edit</button>
+                    </div>
+                `;
+            });
+            document.getElementById('items').innerHTML = output;
+        }
+
+        async function addItem() {
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+
+            await fetch('api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, description })
+            });
+            fetchItems();
+        }
+
+        async function deleteItem(id) {
+            await fetch(`api.php?id=${id}`, { method: 'DELETE' });
+            fetchItems();
+        }
+
+        async function editItem(id) {
+            const name = document.getElementById('edit-name').value;
+            const description = document.getElementById('edit-description').value;
+
+            await fetch(`api.php?id=${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, description })
+            });
+            fetchItems();
+            document.getElementById('edit-form').style.display = 'none';
+        }
+
+        function showEditForm(id, name, description) {
+            document.getElementById('edit-form').style.display = 'block';
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-description').value = description;
+        }
+
+        window.onload = fetchItems;
+    </script>
+</head>
+<body>
+    <h1>API Frontend</h1>
+    <div>
+        <input type="text" id="name" placeholder="Name">
+        <textarea id="description" placeholder="Description"></textarea>
+        <button onclick="addItem()">Add Item</button>
+    </div>
+    <div id="items"></div>
+
+    <div id="edit-form" style="display:none;">
+        <h2>Edit Item</h2>
+        <input type="hidden" id="edit-id">
+        <input type="text" id="edit-name" placeholder="Name">
+        <textarea id="edit-description" placeholder="Description"></textarea>
+        <button onclick="editItem(document.getElementById('edit-id').value)">Save</button>
+    </div>
+</body>
+</html>
